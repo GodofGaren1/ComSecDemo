@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getRecord } from "./controllers/user";
 
 
 export default function Home() {
@@ -22,10 +23,24 @@ export default function Home() {
   }
 
   const handleLogin = () => {
+    if (checkPassword(usernameValue)){
+      router.push('/home');
+    }
     setUsernameValue('')
     setPasswordValue('')
-    router.push('/home');
   }
+
+
+  const checkPassword = async (usernameValue, passwordValue) => {
+    const userInfo = await getRecord(usernameValue);
+    if (userInfo) {
+        console.log(userInfo.password); 
+        return userInfo.password === passwordValue;
+    } else {
+        console.log("User not found");
+        return false;
+    }
+  };
 
   return (
     <div>
