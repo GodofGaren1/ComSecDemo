@@ -4,15 +4,14 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getRecord } from "./controllers/user";
+import { useUser } from "./context/context";
 
 
 export default function Home() {
 
   const router = useRouter()
 
-  const [usernameValue, setUsernameValue] = useState('');
-  const [passwordValue, setPasswordValue] = useState('');
+  const {usernameValue, setUsernameValue, passwordValue, setPasswordValue} = useUser();
 
   const handleUsernameChange = (event) => {
     setUsernameValue(event.target.value)
@@ -26,13 +25,43 @@ export default function Home() {
     if (checkPassword(usernameValue)){
       router.push('/home');
     }
-    setUsernameValue('')
-    setPasswordValue('')
+    // else{
+    //   setUsernameValue('')
+    //   setPasswordValue('')
+    // }
+
   }
+
+  const fetchRecord = (usernameValue) => {
+    fetch("/api/user", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: usernameValue }),
+    })
+    .then((res) => {
+        if (!res.ok) {
+            return res.json().then((error) => {
+                throw new Error(error.Error);
+            });
+        }
+        return res.json(); // Parse JSON if the response is successful
+    })
+    .then((data) => {
+        console.log("Fetched record:", data.username);
+        setUsernameValue(data.record.username)
+        setPasswordValue(data.record.password)
+        // Use the data here, for example, set it in state if you’re using React
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+    });
+  };
 
 
   const checkPassword = async (usernameValue, passwordValue) => {
-    const userInfo = await getRecord(usernameValue);
+    const userInfo = await fetchRecord(usernameValue);
     if (userInfo) {
         console.log(userInfo.password); 
         return userInfo.password === passwordValue;
